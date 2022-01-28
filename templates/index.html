@@ -1,0 +1,63 @@
+<html>
+    <head>
+    <title>Chat Room</title>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="http://127.0.0.1:8000/" ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="http://127.0.0.1:8000/"></script>    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    </head>
+
+    <script>
+        $(document).ready(function(){
+            var socket = io('http://127.0.0.1:8000', {
+    path: '/socket.io'
+});
+
+		socket.on('connect', function () {
+			console.log('user is connected now'+socket.id);
+			socket.emit('messagego', { data: 'User connected' });
+            // socket.emit('connection', {data: 'hi'});
+		});
+
+        socket.on('connection', function(nickname){
+            // socket.nickname = nickname;
+            // users.push(socket.nickname);
+            // console.log(nickname);
+        })
+
+        socket.on('message', function(msg){
+            $("#messages").append('<li>'+msg+'</li>')
+            console.log('Received message');
+            socket.emit('connection', {data: 'hi'});
+        });
+
+        $('#send').on('click', function(){
+            console.log($('#myMessage').val());
+            socket.emit('messagego', {data: $('#myMessage').val()});
+            $('#myMessage').val('');
+        });
+
+        $('#login').on('click', function(){
+            console.log($('#username').val());
+            data = {"username": $('#username').val()};
+            // $.post('http://127.0.0.1:8000/create_session', JSON.stringify(data), function(response){
+            //     console.log("Done");
+            // });
+
+            socket.emit('login_user', {data: $('#username').val()});
+            $('#username').val('');
+        });
+           
+        });
+    </script>
+
+    <body>
+        <input type="text" name="username" id="username" placeholder="Your Name">
+        <button id="login">LogIn</button>
+        <ul id="messages"></ul>
+        <input type="text" id="myMessage">
+        <button id="send">Send</button>
+
+    </body>
+</html>
