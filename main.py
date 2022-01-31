@@ -106,13 +106,13 @@ verifier = BasicVerifier(
 )
 
 
-@app.post("/create_session/{name}")
-async def create_session(name: str, response: Response):
+@app.post("/create_session")
+async def create_session(name: SessionData, response: Response):
 
     session = uuid4()
-    data = SessionData(username=name)
+    # data = SessionData(username=name)
 
-    await backend.create(session, data)
+    await backend.create(session, name)
     cookie.attach_to_response(response, session)
 
     return f"created session for {name}"

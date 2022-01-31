@@ -3,15 +3,17 @@
     <title>Chat Room</title>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="http://127.0.0.1:8000/" ></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="http://127.0.0.1:8000/"></script>    
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous" ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>    
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     </head>
 
     <script>
         $(document).ready(function(){
-            var socket = io('http://127.0.0.1:8000', {
-    path: '/socket.io'
+            console.log("WELCOME");
+            var socket = io('ws://127.0.0.1:8000', {
+    path: '/ws/socket.io',
+    
 });
 
 		socket.on('connect', function () {
@@ -40,10 +42,32 @@
 
         $('#login').on('click', function(){
             console.log($('#username').val());
-            data = {"username": $('#username').val()};
-            // $.post('http://127.0.0.1:8000/create_session', JSON.stringify(data), function(response){
+            data = {'username': $('#username').val()};
+            // $.post('/create_session', data, function(response){
             //     console.log("Done");
+            //     $("span").html(response);
             // });
+
+            var token = document.getElementsByName("csrfToken").value;
+            $.ajax({
+                url: '/create_session',
+                type: 'post',
+                data: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': '*/*',
+                    'Csrf-Token': token  //for object property name, use quoted notation shown in second
+                },
+                dataType: 'json',
+                success: function (response) {
+                    console.log("Done");
+                    $("span").html(response);
+                    $.get('/whoami', function(d){
+                        console.log(d)
+                    });
+                }
+            });
+
 
             socket.emit('login_user', {data: $('#username').val()});
             $('#username').val('');
@@ -59,5 +83,9 @@
         <input type="text" id="myMessage">
         <button id="send">Send</button>
 
+
+        <form method="post" id="myForm" action="someURL">
+            <input name="csrfToken" value="5965f0d244b7d32b334eff840...etc" type="hidden">    
+        </form>
     </body>
 </html>
