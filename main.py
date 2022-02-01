@@ -1,50 +1,56 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, Depends,  HTTPException
 from fastapi_socketio import SocketManager
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
-from typing import Optional
-from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import HTMLResponse
-
-
-app = FastAPI()
-
-# # app.config['SECRET_KEY'] = '12345678'
-socketio = SocketManager(app=app, cors_allowed_origins="*")
-
-@socketio.on('messagego')
-async def handle_msg(*args):
-    await socketio.emit('message', args[1]['data'])
-
-@socketio.on('login_user')
-async def handle_msg(*args):
-    await socketio.emit('message', args[1]['data'])
-
-@socketio.on('connection')
-async def handle_connect(*args):
-    await socketio.emit('connection', {'user':'john'})
-
-html = ""
-with open('templates/index.html', 'r') as f:
-    html = f.read()
-
-@app.get("/")
-async def get():
-    return HTMLResponse(html)
-
-# session management
-
-
 from pydantic import BaseModel
-from fastapi import HTTPException, FastAPI, Response, Depends
 from uuid import UUID, uuid4
 
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.session_verifier import SessionVerifier
 from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
 
-# from app import create, who
 
+app = FastAPI()
+current_user = ""
+# # app.config['SECRET_KEY'] = '12345678'
+socketio = SocketManager(app=app, cors_allowed_origins="*")
+
+@socketio.on('messagego')
+async def handle_msg(*args):
+    # print(args[1]['user'])
+    global current_user 
+    current_user = args[1]['user']
+    data = {'user':args[1]['user'], 'msg':args[1]['data']}
+    await socketio.emit('message', data)
+
+
+home = ""
+with open('templates/index.html', 'r') as f:
+    home = f.read()
+
+@app.get("/")
+async def get():
+    return HTMLResponse(home)
+
+chat_page = ""
+with open('templates/chat.html', 'r') as f:
+    chat_page = f.read()
+@app.get("/chat")
+async def get():
+    return HTMLResponse(chat_page)
+
+# @socketio.on('disconnect')
+# async def handle_leave(*args):
+#     try:
+#         await socketio.on('ping')
+#     except:
+#         print("User left")
+#         data = {'user':current_user, 'msg':"left"}
+#         await socketio.emit('message', data)
+
+
+# session management
+# API's
 
 class SessionData(BaseModel):
     username: str
@@ -129,8 +135,3 @@ async def del_session(response: Response, session_id: UUID = Depends(cookie)):
     cookie.delete_from_response(response)
     return "deleted session"
 
-@socketio.on('login_user')
-async def handle_msg(*args):
-    # create(args[1]['data'])
-    # name = who()
-    await socketio.emit('message', args[1]['data'])

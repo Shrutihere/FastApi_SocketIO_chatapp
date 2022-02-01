@@ -1,6 +1,6 @@
 <html>
     <head>
-    <title>Chat Room</title>
+    <title>ChatApp</title>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous" ></script>
@@ -12,42 +12,25 @@
         $(document).ready(function(){
             console.log("WELCOME");
             var socket = io('ws://127.0.0.1:8000', {
-    path: '/ws/socket.io',
-    
-});
+            path: '/ws/socket.io',
+            
+        });
 
 		socket.on('connect', function () {
 			console.log('user is connected now'+socket.id);
-			socket.emit('messagego', { data: 'User connected' });
-            // socket.emit('connection', {data: 'hi'});
 		});
 
-        socket.on('connection', function(nickname){
-            // socket.nickname = nickname;
-            // users.push(socket.nickname);
-            // console.log(nickname);
-        })
 
-        socket.on('message', function(msg){
+        socket.on('message', function(name,msg){
             $("#messages").append('<li>'+msg+'</li>')
             console.log('Received message');
             socket.emit('connection', {data: 'hi'});
         });
 
-        $('#send').on('click', function(){
-            console.log($('#myMessage').val());
-            socket.emit('messagego', {data: $('#myMessage').val()});
-            $('#myMessage').val('');
-        });
 
         $('#login').on('click', function(){
             console.log($('#username').val());
             data = {'username': $('#username').val()};
-            // $.post('/create_session', data, function(response){
-            //     console.log("Done");
-            //     $("span").html(response);
-            // });
-
             var token = document.getElementsByName("csrfToken").value;
             $.ajax({
                 url: '/create_session',
@@ -60,18 +43,19 @@
                 },
                 dataType: 'json',
                 success: function (response) {
-                    console.log("Done");
-                    $("span").html(response);
                     $.get('/whoami', function(d){
                         console.log(d)
+                        window.location.href = "/chat";
                     });
                 }
             });
-
-
-            socket.emit('login_user', {data: $('#username').val()});
+            socket.emit('messagego', {user: $('#username').val(), data:" logged in!"});
             $('#username').val('');
         });
+
+        // socket.on('disconnect', function(msg){
+        //     $("#messages").append('<li>'+msg+'</li>')
+        // });
            
         });
     </script>
@@ -79,10 +63,6 @@
     <body>
         <input type="text" name="username" id="username" placeholder="Your Name">
         <button id="login">LogIn</button>
-        <ul id="messages"></ul>
-        <input type="text" id="myMessage">
-        <button id="send">Send</button>
-
 
         <form method="post" id="myForm" action="someURL">
             <input name="csrfToken" value="5965f0d244b7d32b334eff840...etc" type="hidden">    
